@@ -92,7 +92,7 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
             pred_score = list(res[0]['scores'].detach().cpu().numpy())
 
             masks = (res[0]['masks']>0.5).squeeze().detach().cpu().numpy()
-            pred_class = [class_names[i] for i in list(res[0]['labels'].numpy())]
+            pred_class = [class_names[i] for i in list(res[0]['labels'].cpu().numpy())]
 
             pred_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(res[0]['boxes'].detach().cpu().numpy())]
 
