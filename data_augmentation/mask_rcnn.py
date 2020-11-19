@@ -53,11 +53,16 @@ class_names = [
 
 
 # load a model pre-trained pre-trained on COCO
-model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
-model.eval()
 
 
-def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug_bird_dataset/train_images/'):
+def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug_bird_dataset/train_images/',gpu_available = False):
+    
+    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
+    if gpu_available:
+        model.to('gpu')
+    
+    model.eval()
+    
     
     for bird in species:
         
