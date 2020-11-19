@@ -64,7 +64,7 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
     model.eval()
     
     
-    for bird in tqdm(species[17:]):
+    for bird in tqdm(species):
         
         dir_path = join(data_path,bird)
         source_dir = listdir(dir_path)
