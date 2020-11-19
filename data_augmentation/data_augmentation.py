@@ -92,8 +92,6 @@ def data_aug(data_path = '../bird_dataset/train_images', output_path = '../aug_b
                 counter += 1
                 
 
-if __name__ == '__main__':
-        data_aug()
 
     
     

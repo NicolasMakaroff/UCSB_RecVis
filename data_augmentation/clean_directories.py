@@ -48,6 +48,3 @@ def clean_dir(data_path = '../aug_bird_dataset/train_images/', val_path = '../au
                 if not img == '.ipynb_checkpoints':
                     remove(join(val_path,bird,img))
 
-if __name__ == '__main__':
-    clean_dir()
-    

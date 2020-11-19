@@ -47,7 +47,4 @@ def create_validation(data_path = '../aug_bird_dataset/train_images/', val_path 
             move(join(dir_path,img),
                 join(val_path,bird,img))
             
-if __name__ == '__main__':
-    
-    create_validation()
         

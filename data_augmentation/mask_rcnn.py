@@ -57,75 +57,70 @@ model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
 model.eval()
 
 
-def crop_bird(bird, data_path = '../bird_dataset/train_images/', output_path = '../aug_bird_dataset/train_images/'):
+def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug_bird_dataset/train_images/'):
     
-
+    for bird in species:
         
-    dir_path = join(data_path,bird)
-    source_dir = listdir(dir_path)
-        
-    counter = 0
-    for img in source_dir:
-        if img == '.ipynb_checkpoints':
-            continue
-                
-            
-        img_path = join(dir_path, img)
-        image = cv2.imread(img_path)
-            
-            
-        transform = transforms.Compose([transforms.ToTensor()])
-        image = transform(image)
+        dir_path = join(data_path,bird)
+        source_dir = listdir(dir_path)
 
-        res = model([image])
-        pred_score = list(res[0]['scores'].detach().numpy())
-
-        masks = (res[0]['masks']>0.5).squeeze().detach().cpu().numpy()
-        pred_class = [class_names[i] for i in list(res[0]['labels'].numpy())]
-
-        pred_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(res[0]['boxes'].detach().numpy())]
-            
-        if not pred_score:
-            continue
-        pred_t = [pred_score.index(x) for x in pred_score if x>0.5][-1]
-        masks = masks[:pred_t+1]
-        boxes = pred_boxes[:pred_t+1]
-        pred_cls = pred_class[:pred_t+1]
-
-        img = cv2.imread(img_path) 
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        aug_dir_path = join(output_path, bird)
-            
-        for i in range(len(masks)):
-            if pred_cls[i] == 'bird':
-
-                x1, y1 = np.floor(boxes[i][0][0]),np.floor(boxes[i][0][1])
-                x2, y2 = np.floor(boxes[i][1][0]), np.floor(boxes[i][1][1])
-                crop = img[int(y1):int(y2),int(x1):int(x2)]
-                    
-                if not exists(join(output_path, bird)):
-                    makedirs(join(output_path, bird))
-
-                cv2.imwrite(join(
-                aug_dir_path,
-                bird[4:] +
-                '_crop_' +
-                str(counter)
-                + '.jpg'
-                ),crop)
-                
-        counter += 1
+        counter = 0
+        for img in source_dir:
+            if img == '.ipynb_checkpoints':
+                continue
 
 
-        
+            img_path = join(dir_path, img)
+            image = cv2.imread(img_path)
+
+
+            transform = transforms.Compose([transforms.ToTensor()])
+            image = transform(image)
+
+            res = model([image])
+            pred_score = list(res[0]['scores'].detach().numpy())
+
+            masks = (res[0]['masks']>0.5).squeeze().detach().cpu().numpy()
+            pred_class = [class_names[i] for i in list(res[0]['labels'].numpy())]
+
+            pred_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(res[0]['boxes'].detach().numpy())]
+
+            if not pred_score:
+                continue
+            pred_t = [pred_score.index(x) for x in pred_score if x>0.5][-1]
+            masks = masks[:pred_t+1]
+            boxes = pred_boxes[:pred_t+1]
+            pred_cls = pred_class[:pred_t+1]
+
+            img = cv2.imread(img_path) 
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            aug_dir_path = join(output_path, bird)
+
+            for i in range(len(masks)):
+                if pred_cls[i] == 'bird':
+
+                    x1, y1 = np.floor(boxes[i][0][0]),np.floor(boxes[i][0][1])
+                    x2, y2 = np.floor(boxes[i][1][0]), np.floor(boxes[i][1][1])
+                    crop = img[int(y1):int(y2),int(x1):int(x2)]
+
+                    if not exists(join(output_path, bird)):
+                        makedirs(join(output_path, bird))
+
+                    cv2.imwrite(join(
+                    aug_dir_path,
+                    bird[4:] +
+                    '_crop_' +
+                    str(counter)
+                    + '.jpg'
+                    ),crop)
+
+            counter += 1
+
 
         
 
         
-if __name__ == '__main__':
-    
-    num_cores = multiprocessing.cpu_count()
-    crop_b = tqdm(species, desc="Crop Bird")
-    Parallel(n_jobs=num_cores)(delayed(crop_bird)(i) for i in crop_b)
+
+        
 
         
