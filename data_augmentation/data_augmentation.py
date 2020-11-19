@@ -2,7 +2,7 @@ from imgaug import augmenters as iaa
 import os
 from os.path import join
 import cv2
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 
 
@@ -36,7 +36,7 @@ blur = iaa.GaussianBlur(sigma=(3.0))
 flip = iaa.Fliplr(1.0)
 contrast = iaa.ContrastNormalization((0.5, 1.5), per_channel=0.5)
 
-def data_aug(data_path = '../bird_dataset/train_images', output_path = '../aug_bird_dataset/train_images/'):
+def data_aug(data_path = '../bird_dataset/train_images', output_path = '../aug_bird_dataset/train_images/', counter=0):
     
     for bird in tqdm(species) :
         
@@ -45,7 +45,7 @@ def data_aug(data_path = '../bird_dataset/train_images', output_path = '../aug_b
         #print(source_img)
         
         
-        counter = 0
+        counter = counter
         
         for image in tqdm(source_img):
             

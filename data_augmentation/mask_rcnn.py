@@ -55,7 +55,7 @@ class_names = [
 # load a model pre-trained pre-trained on COCO
 
 
-def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug_bird_dataset/train_images/',gpu_available = False):
+def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug_bird_dataset/train_images/', counter = 0, gpu_available = False):
     
     model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
     if gpu_available:
@@ -64,12 +64,12 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
     model.eval()
     
     
-    for bird in tqdm(species):
+    for bird in tqdm(species[11:]):
         
         dir_path = join(data_path,bird)
         source_dir = listdir(dir_path)
 
-        counter = 0
+        counter = counter
         for img in source_dir:
             if img == '.ipynb_checkpoints':
                 continue
