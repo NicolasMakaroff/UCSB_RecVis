@@ -30,11 +30,9 @@ species = [
 ]
 
 gauss = iaa.AdditiveGaussianNoise(scale = 0.2 * 255)
-sharp = iaa.Sharpen(alpha = (0, .3), lightness = (0.7, 1.3))
 affine = iaa.Affine(translate_px = {'x': (-50,50), 'y': (-50,50)})
 blur = iaa.GaussianBlur(sigma=(3.0))
 flip = iaa.Fliplr(1.0)
-contrast = iaa.ContrastNormalization((0.5, 1.5), per_channel=0.5)
 
 def data_aug(data_path = '../bird_dataset/train_images', output_path = '../aug_bird_dataset/train_images/', counter=0):
     
@@ -60,19 +58,19 @@ def data_aug(data_path = '../bird_dataset/train_images', output_path = '../aug_b
             aug_img.append(img)
 
             gauss_img = gauss.augment_image(img)
-            sharp_img = sharp.augment_image(img)
+
             affine_img = affine.augment_image(img)
             blur_img = blur.augment_image(img)
             flip_img = flip.augment_image(img)
-            contrast_img = contrast.augment_image(img)
+
             #second_aug_img = second_aug.augment_images(img)
             
             aug_img.append(gauss_img)
             aug_img.append(sharp_img)
-            aug_img.append(affine_img)
+
             aug_img.append(blur_img)
             aug_img.append(flip_img)
-            aug_img.append(contrast_img)
+
             
             aug_dir_path = join(output_path, bird)
             

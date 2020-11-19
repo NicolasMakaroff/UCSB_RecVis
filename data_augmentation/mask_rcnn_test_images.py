@@ -8,7 +8,7 @@ from os import listdir, rename, makedirs
 import torchvision
 from torchvision import transforms
 import matplotlib.pyplot as plt
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 from joblib import Parallel, delayed
 import multiprocessing
@@ -55,7 +55,7 @@ class_names = [
 # load a model pre-trained pre-trained on COCO
 
 
-def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug_bird_dataset/train_images/', counter = 0, gpu_available = False):
+def crop_bird(data_path = '../bird_dataset/test_images/mistery_category/', output_path = '../aug_bird_dataset/test_images/mistery_category/', counter = 0, gpu_available = False):
     
     model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
     if gpu_available:
@@ -64,71 +64,76 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
     model.eval()
     
     
-    for bird in tqdm(species):
+
         
-        dir_path = join(data_path,bird)
-        source_dir = listdir(dir_path)
+        
+    source_dir = listdir(data_path)
 
-        counter = counter
-        for img in source_dir:
-            if img == '.ipynb_checkpoints':
-                continue
-
-
-            img_path = join(dir_path, img)
-            image = cv2.imread(img_path)
-
-
-            transform = transforms.Compose([transforms.ToTensor()])
-            image = transform(image)
+    counter = counter
+    for img in tqdm(source_dir):
+        if img == '.ipynb_checkpoints':
+            continue
             
-            if gpu_available:
-                res = model(torch.unsqueeze(image,0).to('cuda'))
+        if img == '.DS_Store':
+            continue
+                
+            
+        img_path = join(data_path, img)
+        image = cv2.imread(img_path)
+
+
+        transform = transforms.Compose([transforms.ToTensor()])
+        image = transform(image)
+            
+        if gpu_available:
+            res = model(torch.unsqueeze(image,0).to('cuda'))
 
                 
-            else:
-                res = model([image])
+        else:
+            res = model([image])
                 
-            pred_score = list(res[0]['scores'].detach().cpu().numpy())
+        pred_score = list(res[0]['scores'].detach().cpu().numpy())
 
-            masks = (res[0]['masks']>0.5).squeeze().detach().cpu().numpy()
-            pred_class = [class_names[i] for i in list(res[0]['labels'].cpu().numpy())]
+        masks = (res[0]['masks']>0.5).squeeze().detach().cpu().numpy()
+        pred_class = [class_names[i] for i in list(res[0]['labels'].cpu().numpy())]
 
-            pred_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(res[0]['boxes'].detach().cpu().numpy())]
+        pred_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(res[0]['boxes'].detach().cpu().numpy())]
 
-            if not pred_score:
-                continue
+        try:
             pred_t = [pred_score.index(x) for x in pred_score if x>0.5][-1]
             masks = masks[:pred_t+1]
             boxes = pred_boxes[:pred_t+1]
             pred_cls = pred_class[:pred_t+1]
 
-            img = cv2.imread(img_path) 
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            aug_dir_path = join(output_path, bird)
+            crop_img = cv2.imread(img_path) 
+            crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
+            aug_dir_path = join(output_path)
 
             for i in range(len(masks)):
                 if pred_cls[i] == 'bird':
 
-                    x1, y1 = np.floor(boxes[i][0][0])-10,np.floor(boxes[i][0][1])-10
-                    x2, y2 = np.floor(boxes[i][1][0])+10, np.floor(boxes[i][1][1])+10
-                    crop = img[int(y1):int(y2),int(x1):int(x2)]
+                    x1, y1 = np.floor(boxes[i][0][0]),np.floor(boxes[i][0][1])
+                    x2, y2 = np.floor(boxes[i][1][0]), np.floor(boxes[i][1][1])
+                    crop = crop_img[int(y1):int(y2),int(x1):int(x2)]
 
-                    if not exists(join(output_path, bird)):
-                        makedirs(join(output_path, bird))
+                    if not exists(output_path):
+                        makedirs(output_path)
 
-                    cv2.imwrite(join(
-                    aug_dir_path,
-                    bird[4:] +
-                    '_crop_' +
-                    str(counter)
-                    + '.jpg'
-                    ),crop)
-
+                    boolean = cv2.imwrite(join(aug_dir_path,
+                    str(img))
+                    ,crop)
+                        
             counter += 1
+                
+        except IndexError:
+            keep_img = cv2.imread(img_path) 
+            keep_img = cv2.cvtColor(keep_img, cv2.COLOR_BGR2RGB)
+            cv2.imwrite(join(aug_dir_path,
+                        str(img))
+                        ,keep_img)
 
-
-        
+if __name__ == '__main__':
+    crop_bird()
 
         
 
