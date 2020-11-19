@@ -110,8 +110,8 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
             for i in range(len(masks)):
                 if pred_cls[i] == 'bird':
 
-                    x1, y1 = np.floor(boxes[i][0][0])-10,np.floor(boxes[i][0][1])-10
-                    x2, y2 = np.floor(boxes[i][1][0])+10, np.floor(boxes[i][1][1])+10
+                    x1, y1 = np.floor(boxes[i][0][0]),np.floor(boxes[i][0][1])
+                    x2, y2 = np.floor(boxes[i][1][0]), np.floor(boxes[i][1][1])
                     crop = img[int(y1):int(y2),int(x1):int(x2)]
 
                     if not exists(join(output_path, bird)):
