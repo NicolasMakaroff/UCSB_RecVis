@@ -1,6 +1,6 @@
 from imgaug import augmenters as iaa
 import os
-from os.path import join
+from os.path import join, exists
 import cv2
 from tqdm.notebook import tqdm
 
