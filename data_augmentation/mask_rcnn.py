@@ -59,7 +59,7 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
     
     model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
     if gpu_available:
-        model.to('gpu')
+        model.to('cuda')
     
     model.eval()
     
