@@ -83,7 +83,7 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
             image = transform(image)
             
             if gpu_available:
-                image.to('cuda')
+                res = model([image].to('cuda'))
                 
             res = model([image])
             pred_score = list(res[0]['scores'].detach().numpy())
