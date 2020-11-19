@@ -28,14 +28,17 @@ def clean_dir(data_path = '../aug_bird_dataset/train_images/', val_path = '../au
     for bird in species:
         
         dir_path = join(data_path, bird)
-        source_img = listdir(dir_path)
-        val_img = listdir(join(val_path,bird))
-        
         if not exists(dir_path):
             makedirs(dir_path)
         
+        source_img = listdir(dir_path)
+        
         if not exists(join(val_path,bird)):
             makedirs(join(val_path,bird))
+        
+        val_img = listdir(join(val_path,bird))
+        
+        
         
         for img in source_img:
                 
