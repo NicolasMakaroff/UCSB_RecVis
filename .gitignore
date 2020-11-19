@@ -2,5 +2,6 @@
 .DS_Store
 __pycache__
 bird_dataset/
+bird_dataset_copie/
 aug_bird_dataset/
 experiment/
