@@ -84,13 +84,14 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
             
             if gpu_available:
                 res = model(torch.unsqueeze(image,0).to('cuda'))
+                res = res.cpu()
                 
             else:
                 res = model([image])
                 
             pred_score = list(res[0]['scores'].detach().numpy())
 
-            masks = (res[0]['masks']>0.5).squeeze().detach().cpu().numpy()
+            masks = (res[0]['masks']>0.5).squeeze().detach().numpy()
             pred_class = [class_names[i] for i in list(res[0]['labels'].numpy())]
 
             pred_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(res[0]['boxes'].detach().numpy())]
