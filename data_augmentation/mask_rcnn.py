@@ -8,7 +8,7 @@ from os import listdir, rename, makedirs
 import torchvision
 from torchvision import transforms
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 from joblib import Parallel, delayed
 import multiprocessing
@@ -64,7 +64,7 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
     model.eval()
     
     
-    for bird in species:
+    for bird in tqdm(species):
         
         dir_path = join(data_path,bird)
         source_dir = listdir(dir_path)
