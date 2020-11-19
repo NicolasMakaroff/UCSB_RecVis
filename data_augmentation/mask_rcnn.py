@@ -80,7 +80,7 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
 
 
             transform = transforms.Compose([transforms.ToTensor()])
-            image = transform([image])
+            image = transform(np.expand_dims(np.array(image),axis=0))
             
             if gpu_available:
                 res = model(image.to('cuda'))
