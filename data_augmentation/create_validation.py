@@ -44,6 +44,9 @@ def create_validation(data_path = '../aug_bird_dataset/train_images/', val_path 
         for img in validation_sample:
             if img == '.ipynb_checkpoints':
                 continue
+            if not exists(join(val_path,bird)):
+                makedirs(join(val_path,bird))
+                
             move(join(dir_path,img),
                 join(val_path,bird,img))
             
