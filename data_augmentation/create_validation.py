@@ -47,4 +47,47 @@ def create_validation(data_path = '../aug_bird_dataset/train_images/', val_path 
             move(join(dir_path,img),
                 join(val_path,bird,img))
             
+
+def fusion_train_val(train_path = '../bird_dataset/train_images/', val_path = '../bird_dataset/val_images/', output_path = '../aug_bird_dataset/train_images/' ):
+    
+    for bird in species:
         
+        train_dir = join(train_path, bird)
+        val_dir = join(val_path, bird)
+        
+        train_imgs = listdir(train_dir)
+        val_imgs = listdir(val_dir)
+        
+        dir_obj = join(output_path, bird)
+        
+        for img in train_imgs:
+        
+            if img == '.ipynb_checkpoints':
+                continue
+            img_path = join(train_dir, img)
+            image = cv2.imread(img_path) 
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            
+            if not exists(dir_obj):
+                makedirs(dir_obj)
+                
+            cv2.imwrite(join(
+                    dir_obj,
+                    str(img)
+                ), image)
+            
+        for img in val_imgs:
+        
+            if img == '.ipynb_checkpoints':
+                continue
+            img_path = join(val_dir, img)
+            image = cv2.imread(img_path) 
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            
+            if not exists(dir_obj):
+                makedirs(dir_obj)
+            
+            cv2.imwrite(join(
+                    dir_obj,
+                    str(img)
+                ), image)

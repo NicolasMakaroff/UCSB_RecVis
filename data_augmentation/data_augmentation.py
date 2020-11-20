@@ -2,7 +2,7 @@ from imgaug import augmenters as iaa
 import os
 from os.path import join, exists
 import cv2
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 
 
@@ -29,7 +29,7 @@ species = [
     '034.Gray_crowned_Rosy_Finch'
 ]
 
-gauss = iaa.AdditiveGaussianNoise(scale = 0.2 * 255)
+#gauss = iaa.AdditiveGaussianNoise(scale = 0.2 * 255)
 affine = iaa.Affine(translate_px = {'x': (-50,50), 'y': (-50,50)})
 blur = iaa.GaussianBlur(sigma=(3.0))
 flip = iaa.Fliplr(1.0)
@@ -57,7 +57,7 @@ def data_aug(data_path = '../bird_dataset/train_images', output_path = '../aug_b
             #print(type(img))
             aug_img.append(img)
 
-            gauss_img = gauss.augment_image(img)
+            #gauss_img = gauss.augment_image(img)
 
             affine_img = affine.augment_image(img)
             blur_img = blur.augment_image(img)
@@ -65,8 +65,8 @@ def data_aug(data_path = '../bird_dataset/train_images', output_path = '../aug_b
 
             #second_aug_img = second_aug.augment_images(img)
             
-            aug_img.append(gauss_img)
-            aug_img.append(sharp_img)
+            #aug_img.append(gauss_img)
+            aug_img.append(affine_img)
 
             aug_img.append(blur_img)
             aug_img.append(flip_img)
@@ -90,7 +90,8 @@ def data_aug(data_path = '../bird_dataset/train_images', output_path = '../aug_b
                 counter += 1
                 
 
-
+if __name__ == '__main__':
+    data_aug()
     
     
     
