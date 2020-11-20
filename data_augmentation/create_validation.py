@@ -39,7 +39,7 @@ def create_validation(data_path = '../aug_bird_dataset/train_images/', val_path 
         
         number = len(train_imgs)
         
-        validation_sample = random.sample(train_imgs,60)
+        validation_sample = random.sample(train_imgs,6)
         
         for img in validation_sample:
             if img == '.ipynb_checkpoints':
