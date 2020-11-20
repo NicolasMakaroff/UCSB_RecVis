@@ -96,39 +96,63 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
 
             pred_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(res[0]['boxes'].detach().cpu().numpy())]
 
-            if not pred_score:
-                continue
-            pred_t = [pred_score.index(x) for x in pred_score if x>0.5][-1]
-            masks = masks[:pred_t+1]
-            boxes = pred_boxes[:pred_t+1]
-            pred_cls = pred_class[:pred_t+1]
+            try :
+                pred_t = [pred_score.index(x) for x in pred_score if x>0.5][-1]
+                masks = masks[:pred_t+1]
+                boxes = pred_boxes[:pred_t+1]
+                pred_cls = pred_class[:pred_t+1]
+            
+            
+                img = cv2.imread(img_path) 
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                aug_dir_path = join(output_path, bird)
+                if 'bird' in pred_cls :
+                    
+                    for i in range(len(masks)):
+                        if pred_cls[i] == 'bird':
 
-            img = cv2.imread(img_path) 
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            aug_dir_path = join(output_path, bird)
+                            x1, y1 = np.floor(boxes[i][0][0]),np.floor(boxes[i][0][1])
+                            x2, y2 = np.floor(boxes[i][1][0]), np.floor(boxes[i][1][1])
+                            crop = img[int(y1):int(y2),int(x1):int(x2)]
 
-            for i in range(len(masks)):
-                if pred_cls[i] == 'bird':
+                            if not exists(join(output_path, bird)):
+                                makedirs(join(output_path, bird))
 
-                    x1, y1 = np.floor(boxes[i][0][0]),np.floor(boxes[i][0][1])
-                    x2, y2 = np.floor(boxes[i][1][0]), np.floor(boxes[i][1][1])
-                    crop = img[int(y1):int(y2),int(x1):int(x2)]
+                            cv2.imwrite(join(
+                            aug_dir_path,
+                            bird[4:] +
+                            '_crop_' +
+                            str(counter)
+                            + '.jpg'
+                            ),crop)
 
-                    if not exists(join(output_path, bird)):
-                        makedirs(join(output_path, bird))
+                    counter += 1
+
+                else:
 
                     cv2.imwrite(join(
-                    aug_dir_path,
-                    bird[4:] +
-                    '_crop_' +
-                    str(counter)
-                    + '.jpg'
-                    ),crop)
+                            aug_dir_path,
+                            bird[4:] +
+                            '_crop_' +
+                            str(counter)
+                            + '.jpg'
+                            ),keep_img)
+                    counter += 1
+                
+            except:
+                
+                keep_img = cv2.imread(img_path) 
+                keep_img = cv2.cvtColor(keep_img, cv2.COLOR_BGR2RGB)
+                aug_dir_path = join(output_path, bird)
 
-            counter += 1
-
-
-        
+                cv2.imwrite(join(
+                        aug_dir_path,
+                        bird[4:] +
+                        '_crop_' +
+                        str(counter)
+                        + '.jpg'
+                        ),keep_img)
+                counter += 1
 
         
 
