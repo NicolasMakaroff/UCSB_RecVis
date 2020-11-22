@@ -13,6 +13,8 @@ from tqdm.notebook import tqdm
 from joblib import Parallel, delayed
 import multiprocessing
 
+from PIL import Image
+
 species = [
     '004.Groove_billed_Ani',
     '009.Brewer_Blackbird',
@@ -55,17 +57,48 @@ class_names = [
 # load a model pre-trained pre-trained on COCO
 
 
-def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug_bird_dataset/train_images/', counter = 0, gpu_available = False):
+class Mask_RCNN_Detector():
     
-    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
-    if gpu_available:
-        model.to('cuda')
+    def __init__(self, args):
+        self.args = args
+        self.input_dir = args.images_folder
+        self.output_dir = args.images_output
+
+        
+    def create_padding(self, image):
+        x, y, z = image.shape
+        ratio = np.minimum(self.padding/x, self.padding/y)
+        
+        #use PIL
+        image = Image.fromarray(image)
+        image = image.resize((int(np.ceil(y * ratio)),int(np.ceil(x*ratio))), Image.ANTIALIAS)
+        xx, yy = image.size
+        
+        image_new = Image.new('RGB', (self.padding, self.padding))
+        size_new = np.maximum(xx, yy)
+        diag_a = int(np.ceil(size_new - xx/2))
+        diag_b = int(size_new - yy/2)
+        
+        image_new.paste(image, (diag_a, diag_b))
+        del image
+        return image_new
     
-    model.eval()
+
+    def crop_bird(self, counter = 0):
+        
+        gpu_available = torch.cuda.is_available()
+        
+    
+        model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
+        if gpu_available:
+            model.to('cuda')
+    
+        model.eval()
     
     
     for bird in tqdm(species):
         
+        data_path = self.input_dir
         dir_path = join(data_path,bird)
         source_dir = listdir(dir_path)
 
@@ -83,11 +116,13 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
             image = transform(image)
             
             if gpu_available:
-                res = model(torch.unsqueeze(image,0).to('cuda'))
+                with torch.no_grad():
+                    res = model(torch.unsqueeze(image,0).to('cuda'))
 
                 
             else:
-                res = model([image])
+                with torch.no_grad():
+                    res = model([image])
                 
             pred_score = list(res[0]['scores'].detach().cpu().numpy())
 
@@ -110,9 +145,15 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
                     
                     for i in range(len(masks)):
                         if pred_cls[i] == 'bird':
-
-                            x1, y1 = np.floor(boxes[i][0][0]),np.floor(boxes[i][0][1])
+                            
+                            x1, y1 = np.ceil(boxes[i][0][0]),np.ceil(boxes[i][0][1])
                             x2, y2 = np.floor(boxes[i][1][0]), np.floor(boxes[i][1][1])
+                            box_h = (y2 - y1) * img.shape[0]
+                            box_w = (x2 - x1) * img.shape[1]
+                            
+                            x1, y1 = np.maximum(0,x1 - 20), np.maximum(0, y1 - 20)
+                            x2, y2 = np.minimum(x1 + box_w + 40, img.shape[1]), np.minimum(y1 + box_h + 40, img.shape[0])
+                            
                             crop = img[int(y1):int(y2),int(x1):int(x2)]
 
                             if not exists(join(output_path, bird)):
@@ -125,6 +166,13 @@ def crop_bird(data_path = '../bird_dataset/train_images/', output_path = '../aug
                             str(counter)
                             + '.jpg'
                             ),crop)
+                            
+                            cv2.imwrite(join(
+                            aug_dir_path,
+                            bird[4:] +
+                            str(counter)
+                            + '.jpg'
+                            ),img)
 
                     counter += 1
 

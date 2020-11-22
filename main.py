@@ -6,9 +6,12 @@ import torch.optim as optim
 from torchvision import datasets
 from torch.autograd import Variable
 from tqdm import tqdm
+from data_augmentation.mask_rcnn import *
 
 # Training settings
 parser = argparse.ArgumentParser(description='RecVis A3 training script')
+
+
 parser.add_argument('--data', type=str, default='bird_dataset', metavar='D',
                     help="folder where data is located. train_images/ and val_images/ need to be found in the folder")
 parser.add_argument('--batch-size', type=int, default=64, metavar='B',
@@ -25,16 +28,48 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--experiment', type=str, default='experiment', metavar='E',
                     help='folder where experiment outputs are located.')
+
+
+# Detection settings
+parser.add_argument('--images_folder_train', type=str, default='bird_dataset/train_images', help= 'folder where the data is located.')
+parser.add_argument('--images_folder_test', type=str, default='bird_dataset/val_images', help= 'folder where the data is located.')
+
+
+parser.add_argument('--images_output_train', type=str, default='aug_bird_dataset/train_images', help='output folder for the cropped images')
+parser.add_argument('--images_output_val', type=str, default='aug_bird_dataset/val_images', help='output folder for the cropped images')
+parser.add_argument('--merge', action = 'store_true', dest = merge, help = 'Training on all available data, no validation')
+parser.add_argument('--crop', action = 'store_true', dest = crop, help : 'create crop images on the birds')
+
 args = parser.parse_args()
 use_cuda = torch.cuda.is_available()
 torch.manual_seed(args.seed)
 
+
+if not os.path.exists(args.images_output):
+    os.makedirs(args.images_output)
+    
+# crop bird images
+if args.crop :
+    Detector = Mask_RCNN_Detector(args)
+    Detector.crop_bird()
+    args.data = 'aug_bird_dataset'
+    
+if agars.merge:
+    if not os.path.exists('final_bird_dataset'):
+        os.makedirs('final_bird_dataset')
+        
+    check_output('cp -fr aug_bird_dataset/train_images/. final_bird_dataset' shell = True)
+    check_output('cp -fr aug_bird_dataset/val_images/. final_bird_dataset' shell = True)
+    args.data = 'final_bird_dataset'
+    
+
+    
 # Create experiment folder
 if not os.path.isdir(args.experiment):
     os.makedirs(args.experiment)
 
 # Data initialization and loading
-from data import data_transforms
+from data import data_transforms, data_transforms_test
 
 train_loader = torch.utils.data.DataLoader(
     datasets.ImageFolder(args.data + '/train_images',
@@ -42,7 +77,7 @@ train_loader = torch.utils.data.DataLoader(
     batch_size=args.batch_size, shuffle=True, num_workers=0)
 val_loader = torch.utils.data.DataLoader(
     datasets.ImageFolder(args.data + '/val_images',
-                         transform=data_transforms),
+                         transform=data_transforms_test),
     batch_size=args.batch_size, shuffle=False, num_workers=0)
 
 # Neural network and optimizer
@@ -55,8 +90,8 @@ if use_cuda:
 else:
     print('Using CPU')
 
-#optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-optimizer = optim.Adam(model.parameters(), lr=args.lr)
+optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+#optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
 def train(epoch):
     model.train()
@@ -65,7 +100,7 @@ def train(epoch):
             data, target = data.cuda(), target.cuda()
         optimizer.zero_grad()
         output = model(data)
-        criterion = torch.nn.CrossEntropyLoss(reduction='mean')
+        criterion = torch.nn.CrossEntropyLoss(reduction='elementwise_mean')
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
@@ -83,7 +118,7 @@ def validation():
             data, target = data.cuda(), target.cuda()
         output = model(data)
         # sum up batch loss
-        criterion = torch.nn.CrossEntropyLoss(reduction='mean')
+        criterion = torch.nn.CrossEntropyLoss(reduction='elementwise_mean')
         validation_loss += criterion(output, target).data.item()
         # get the index of the max log-probability
         pred = output.data.max(1, keepdim=True)[1]

@@ -38,7 +38,7 @@ def create_validation(data_path = '../aug_bird_dataset/train_images/', val_path 
         train_imgs = listdir(dir_path)
         
         number = len(train_imgs)
-        
+        print(number)
         validation_sample = random.sample(train_imgs,6)
         
         for img in validation_sample:
