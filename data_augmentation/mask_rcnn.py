@@ -60,6 +60,7 @@ class_names = [
 class Mask_RCNN_Detector():
     
     def __init__(self, args):
+        
         self.args = args
         self.input_dir = args.images_folder
         self.output_dir = args.images_output
@@ -96,87 +97,102 @@ class Mask_RCNN_Detector():
         model.eval()
     
     
-    for bird in tqdm(species):
-        
-        data_path = self.input_dir
-        dir_path = join(data_path,bird)
-        source_dir = listdir(dir_path)
+        for bird in tqdm(species):
 
-        counter = counter
-        for img in source_dir:
-            if img == '.ipynb_checkpoints':
-                continue
+            data_path = self.input_dir
+            dir_path = join(data_path,bird)
+            source_dir = listdir(dir_path)
 
-
-            img_path = join(dir_path, img)
-            image = cv2.imread(img_path)
+            counter = counter
+            for img in source_dir:
+                if img == '.ipynb_checkpoints':
+                    continue
 
 
-            transform = transforms.Compose([transforms.ToTensor()])
-            image = transform(image)
-            
-            if gpu_available:
-                with torch.no_grad():
-                    res = model(torch.unsqueeze(image,0).to('cuda'))
+                img_path = join(dir_path, img)
+                image = cv2.imread(img_path)
 
-                
-            else:
-                with torch.no_grad():
-                    res = model([image])
-                
-            pred_score = list(res[0]['scores'].detach().cpu().numpy())
 
-            masks = (res[0]['masks']>0.5).squeeze().detach().cpu().numpy()
-            pred_class = [class_names[i] for i in list(res[0]['labels'].cpu().numpy())]
+                transform = transforms.Compose([transforms.ToTensor()])
+                image = transform(image)
 
-            pred_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(res[0]['boxes'].detach().cpu().numpy())]
+                if gpu_available:
+                    with torch.no_grad():
+                        res = model(torch.unsqueeze(image,0).to('cuda'))
 
-            try :
-                pred_t = [pred_score.index(x) for x in pred_score if x>0.5][-1]
-                masks = masks[:pred_t+1]
-                boxes = pred_boxes[:pred_t+1]
-                pred_cls = pred_class[:pred_t+1]
-            
-            
-                img = cv2.imread(img_path) 
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                aug_dir_path = join(output_path, bird)
-                if 'bird' in pred_cls :
-                    
-                    for i in range(len(masks)):
-                        if pred_cls[i] == 'bird':
-                            
-                            x1, y1 = np.ceil(boxes[i][0][0]),np.ceil(boxes[i][0][1])
-                            x2, y2 = np.floor(boxes[i][1][0]), np.floor(boxes[i][1][1])
-                            box_h = (y2 - y1) * img.shape[0]
-                            box_w = (x2 - x1) * img.shape[1]
-                            
-                            x1, y1 = np.maximum(0,x1 - 20), np.maximum(0, y1 - 20)
-                            x2, y2 = np.minimum(x1 + box_w + 40, img.shape[1]), np.minimum(y1 + box_h + 40, img.shape[0])
-                            
-                            crop = img[int(y1):int(y2),int(x1):int(x2)]
-
-                            if not exists(join(output_path, bird)):
-                                makedirs(join(output_path, bird))
-
-                            cv2.imwrite(join(
-                            aug_dir_path,
-                            bird[4:] +
-                            '_crop_' +
-                            str(counter)
-                            + '.jpg'
-                            ),crop)
-                            
-                            cv2.imwrite(join(
-                            aug_dir_path,
-                            bird[4:] +
-                            str(counter)
-                            + '.jpg'
-                            ),img)
-
-                    counter += 1
 
                 else:
+                    with torch.no_grad():
+                        res = model([image])
+
+                pred_score = list(res[0]['scores'].detach().cpu().numpy())
+
+                masks = (res[0]['masks']>0.5).squeeze().detach().cpu().numpy()
+                pred_class = [class_names[i] for i in list(res[0]['labels'].cpu().numpy())]
+
+                pred_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(res[0]['boxes'].detach().cpu().numpy())]
+
+                try :
+                    pred_t = [pred_score.index(x) for x in pred_score if x>0.5][-1]
+                    masks = masks[:pred_t+1]
+                    boxes = pred_boxes[:pred_t+1]
+                    pred_cls = pred_class[:pred_t+1]
+
+
+                    img = cv2.imread(img_path) 
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                    aug_dir_path = join(output_path, bird)
+                    if 'bird' in pred_cls :
+
+                        for i in range(len(masks)):
+                            if pred_cls[i] == 'bird':
+
+                                x1, y1 = np.ceil(boxes[i][0][0]),np.ceil(boxes[i][0][1])
+                                x2, y2 = np.floor(boxes[i][1][0]), np.floor(boxes[i][1][1])
+                                box_h = (y2 - y1) * img.shape[0]
+                                box_w = (x2 - x1) * img.shape[1]
+
+                                x1, y1 = np.maximum(0,x1 - 20), np.maximum(0, y1 - 20)
+                                x2, y2 = np.minimum(x1 + box_w + 40, img.shape[1]), np.minimum(y1 + box_h + 40, img.shape[0])
+
+                                crop = img[int(y1):int(y2),int(x1):int(x2)]
+
+                                if not exists(join(output_path, bird)):
+                                    makedirs(join(output_path, bird))
+
+                                cv2.imwrite(join(
+                                aug_dir_path,
+                                bird[4:] +
+                                '_crop_' +
+                                str(counter)
+                                + '.jpg'
+                                ),crop)
+
+                                cv2.imwrite(join(
+                                aug_dir_path,
+                                bird[4:] +
+                                str(counter)
+                                + '.jpg'
+                                ),img)
+
+                        counter += 1
+
+                    else:
+
+                        cv2.imwrite(join(
+                                aug_dir_path,
+                                bird[4:] +
+                                '_crop_' +
+                                str(counter)
+                                + '.jpg'
+                                ),keep_img)
+                        counter += 1
+
+                except:
+
+                    keep_img = cv2.imread(img_path) 
+                    keep_img = cv2.cvtColor(keep_img, cv2.COLOR_BGR2RGB)
+                    aug_dir_path = join(output_path, bird)
 
                     cv2.imwrite(join(
                             aug_dir_path,
@@ -186,21 +202,6 @@ class Mask_RCNN_Detector():
                             + '.jpg'
                             ),keep_img)
                     counter += 1
-                
-            except:
-                
-                keep_img = cv2.imread(img_path) 
-                keep_img = cv2.cvtColor(keep_img, cv2.COLOR_BGR2RGB)
-                aug_dir_path = join(output_path, bird)
-
-                cv2.imwrite(join(
-                        aug_dir_path,
-                        bird[4:] +
-                        '_crop_' +
-                        str(counter)
-                        + '.jpg'
-                        ),keep_img)
-                counter += 1
 
         
 

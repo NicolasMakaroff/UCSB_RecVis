@@ -7,6 +7,7 @@ from torchvision import datasets
 from torch.autograd import Variable
 from tqdm import tqdm
 from data_augmentation.mask_rcnn import *
+from subprocess import check_output
 
 # Training settings
 parser = argparse.ArgumentParser(description='RecVis A3 training script')
@@ -37,16 +38,16 @@ parser.add_argument('--images_folder_test', type=str, default='bird_dataset/val_
 
 parser.add_argument('--images_output_train', type=str, default='aug_bird_dataset/train_images', help='output folder for the cropped images')
 parser.add_argument('--images_output_val', type=str, default='aug_bird_dataset/val_images', help='output folder for the cropped images')
-parser.add_argument('--merge', action = 'store_true', dest = merge, help = 'Training on all available data, no validation')
-parser.add_argument('--crop', action = 'store_true', dest = crop, help : 'create crop images on the birds')
+parser.add_argument('--merge', action = 'store_true', dest = 'merge', help = 'Training on all available data, no validation')
+parser.add_argument('--crop', action = 'store_true', dest = 'crop', help = 'create crop images on the birds')
 
 args = parser.parse_args()
 use_cuda = torch.cuda.is_available()
 torch.manual_seed(args.seed)
 
 
-if not os.path.exists(args.images_output):
-    os.makedirs(args.images_output)
+if not os.path.exists(args.images_output_train):
+    os.makedirs(args.images_output_train)
     
 # crop bird images
 if args.crop :
@@ -54,12 +55,12 @@ if args.crop :
     Detector.crop_bird()
     args.data = 'aug_bird_dataset'
     
-if agars.merge:
+if args.merge:
     if not os.path.exists('final_bird_dataset'):
         os.makedirs('final_bird_dataset')
         
-    check_output('cp -fr aug_bird_dataset/train_images/. final_bird_dataset' shell = True)
-    check_output('cp -fr aug_bird_dataset/val_images/. final_bird_dataset' shell = True)
+    check_output('cp -fr aug_bird_dataset/train_images/. final_bird_dataset', shell = True)
+    check_output('cp -fr aug_bird_dataset/val_images/. final_bird_dataset', shell = True)
     args.data = 'final_bird_dataset'
     
 
@@ -83,7 +84,7 @@ val_loader = torch.utils.data.DataLoader(
 # Neural network and optimizer
 # We define neural net in model.py so that it can be reused by the evaluate.py script
 from model import Net
-model = Net()
+model = Net(20)
 if use_cuda:
     print('Using GPU')
     model.cuda()
@@ -99,6 +100,7 @@ def train(epoch):
         if use_cuda:
             data, target = data.cuda(), target.cuda()
         optimizer.zero_grad()
+        print(data.shape)
         output = model(data)
         criterion = torch.nn.CrossEntropyLoss(reduction='elementwise_mean')
         loss = criterion(output, target)
@@ -137,3 +139,4 @@ for epoch in range(1, args.epochs + 1):
     model_file = args.experiment + '/model_' + str(epoch) + '.pth'
     torch.save(model.state_dict(), model_file)
     print('Saved model to ' + model_file + '. You can run `python evaluate.py --model ' + model_file + '` to generate the Kaggle formatted csv file\n')
+    del model
